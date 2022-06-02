@@ -17,7 +17,7 @@ fg.info = Style(fg.li_blue, ef.bold)
 fg.debug = Style(fg.white, ef.bold)
 fg.error = Style(fg.red)
 fg.critical = Style(fg.li_red, ef.bold)
-fg.stats = Style(fg.li_magenta, ef.bold)
+fg.stats = Style(fg.da_grey, ef.bold)
 fg.undefined = Style(fg.li_grey, ef.bold)
 
 

@@ -6,6 +6,7 @@ class Filter_exception(Filter):
     https://stackoverflow.com/questions/47432006/logging-exception-filters-in-python
 
     by default return True, if log record has exc_info
+    if reverse is True, return False, if log record has exc_info
     """
 
     def __init__(self, reverse: bool = False, *args, **kwargs):

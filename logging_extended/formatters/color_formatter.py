@@ -18,7 +18,26 @@ fg.debug = Style(fg.white, ef.bold)
 fg.error = Style(fg.red)
 fg.critical = Style(fg.li_red, ef.bold)
 fg.stats = Style(fg.li_magenta, ef.bold)
-fg.undefined = Style(fg.li_cyan, ef.bold)
+fg.undefined = Style(fg.li_grey, ef.bold)
+
+
+def display_sty_palette(display_blocks=False):
+    """
+    Displays available colors from sty module
+    """
+    end = " " if display_blocks else "\n"
+    fg_dict = sty.fg.as_dict()
+    print("foreground colors:")
+    for key, value in fg_dict.items():
+        print(f"{value}sty.fg.{key}{sty.rs.all}", end=end)
+    print()
+    print("effects:")
+    ef_dict = sty.ef.as_dict()
+    for key, value in ef_dict.items():
+        print(f"{value}sty.ef.{key}{sty.rs.all}", end=end)
+    bg_dict = sty.bg.as_dict()
+    for key, value in bg_dict.items():
+        print(f"{value}sty.bg.{key}{sty.rs.all}", end=end)
 
 
 class ColorFormatter(Formatter):
@@ -73,7 +92,7 @@ class ColorFormatter(Formatter):
         self.colors[key] = value
 
     def __getitem__(self, item):
-        return self.colors[item]
+        return self.colors.get(item, self.undefined_color)
 
     def __delitem__(self, key):
         del self.colors[key]

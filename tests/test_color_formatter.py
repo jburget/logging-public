@@ -1,23 +1,17 @@
 import logging
+
+import pytest
 import sty
 from pytest import fixture
 
-from logging_extended import ColorFormatter
+from logging_extended.formatters import display_sty_palette
 
 
-@fixture
-def color_formatter():
-    return ColorFormatter("%(name)s - %(levelname)-8s - %(message)s")
-
-
-@fixture
-def colored_logger(terminalLogger, terminalHandler, color_formatter):
-    terminalHandler.setFormatter(color_formatter)
-    return terminalLogger
-
-
-def test_format(colored_logger):
+@pytest.mark.skip("spam output")
+def test_colored_levels(colored_logger):
     print()
+    colored_logger.log(2, "very long and useful message")  # color is not defined for level 2
+    colored_logger.log(5, "very long and useful message")
     colored_logger.debug("very long and useful message")
     colored_logger.info("very long and useful message")
     colored_logger.warning("very long and useful message")
@@ -25,23 +19,24 @@ def test_format(colored_logger):
     colored_logger.critical("very long and useful message")
 
 
-def test_color_formatter(terminalLogger, terminalHandler):
+def test_managing_colors(color_formatter):
     print()
-    formatter = ColorFormatter()
-    colors = formatter.colors.copy()
-    formatter[logging.DEBUG] = sty.fg.black
-    assert colors != formatter.colors
-    assert formatter[logging.DEBUG] == sty.fg.black
-    terminalHandler.setFormatter(formatter)
-    terminalLogger.debug("help meeeeee")
-    terminalLogger.warning("no ha i told you")
+    color_formatter[logging.DEBUG] = sty.fg.black
+    color_formatter[logging.INFO] = sty.fg.yellow
+    assert color_formatter[logging.DEBUG] == sty.fg.black
+    assert color_formatter[logging.INFO] == sty.fg.yellow
 
-    del formatter[logging.DEBUG]
+    del color_formatter[logging.DEBUG]
+    assert color_formatter[logging.DEBUG] == sty.fg.undefined
 
-    terminalLogger.debug("working")
+    color_formatter.undefined_color = sty.fg.li_cyan
+    assert color_formatter.undefined_color == sty.fg.li_cyan
 
-    formatter.undefined_color = sty.fg.li_cyan
-    assert formatter.undefined_color == sty.fg.li_cyan
+    color_formatter.reset = sty.rs.fg
+    assert color_formatter.reset == sty.rs.fg
 
-    formatter.reset = sty.rs.fg
-    assert formatter.reset == sty.rs.fg
+
+@pytest.mark.skip("spam output")
+def test_display_sty_palette():
+    print()
+    display_sty_palette(display_blocks=True)

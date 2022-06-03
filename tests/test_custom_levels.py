@@ -31,3 +31,15 @@ def test_set_custom_level_with_existing_level(logger, log_creator, colored_termi
     logger.addHandler(colored_terminal_handler)
     logger.stats("very long and useful message")
     logger.debug("very long and useful message")
+
+
+def test_set_custom_level_on_logger_adapter(colored_logger):
+    print()
+    lv_name = 'TEST'
+    lv_int = 2
+    set_custom_level(lv_name, lv_int)
+    assert logging.getLevelName(lv_int) == lv_name
+
+    adapter = logging.LoggerAdapter(colored_logger, {})
+    adapter.test("very long and useful message")
+    adapter.debug("very long and useful message")

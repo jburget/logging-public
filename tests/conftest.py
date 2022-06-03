@@ -9,6 +9,7 @@ from logging import setLogRecordFactory
 from pytest import fixture
 from logging import getLogger
 from logging_extended import ColorFormatter
+from logging_extended import set_custom_level
 
 
 @fixture(scope="function")
@@ -33,7 +34,7 @@ def terminalLogger(logger, terminalHandler) -> logging.Logger:
 
 @fixture
 def color_formatter():
-    return ColorFormatter("%(name)s - %(levelname)-8s - %(message)s")
+    return ColorFormatter(fmt="{name} - {levelname:^9} - {message}", style="{")
 
 
 @fixture
@@ -48,59 +49,61 @@ def colored_logger(terminalLogger, terminalHandler, color_formatter):
     return terminalLogger
 
 
-class LogFactory:
+class LogCreator(logging.Logger):
+    """
+    Returns LogRecord object when used as logger
 
-    def __init__(self):
+    when context is not entered, cannot be used as logger
+    changes LogFactory on enter and restores on exit
+    object is callable to be also used as LogFactory
+    """
+
+    def __init__(self, name, level=DEBUG):
+        super().__init__(name, level)
         self.old_factory = getLogRecordFactory()
-        self.logs: list[LogRecord] = []
-
-    def pop(self):
-        return self.logs.pop()
-
-    def __call__(self, *args, **kwargs):
-        record = self.old_factory(*args, **kwargs)
-        self.logs.append(record)
-        return record
-
-
-def instantiate_factory_storage():
-    factory = LogFactory()
-    setLogRecordFactory(factory)
-    return factory
-
-
-class LogCreator(logging.getLoggerClass()):
+        self.__logs_storage = []
 
     def __enter__(self):
-        self.logs_storage: LogFactory = instantiate_factory_storage()
+        setLogRecordFactory(self)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+        setLogRecordFactory(self.old_factory)
+
+    def __call__(self, *args, **kwargs):
+        record = self.old_factory(*args, **kwargs)
+        self.__logs_storage.append(record)
+        return record
+
+    def pop(self):
+        try:
+            return self.__logs_storage.pop()
+        except IndexError as e:
+            raise Warning("No log record in storage, maybe caused by not using as context manager") from e
 
     def debug(self, msg, *args, **kwargs):
         super(LogCreator, self).debug(msg, *args, **kwargs)
-        return self.logs_storage.pop()
+        return self.pop()
 
     def info(self, msg, *args, **kwargs):
         super(LogCreator, self).info(msg, *args, **kwargs)
-        return self.logs_storage.pop()
+        return self.pop()
 
     def warning(self, msg, *args, **kwargs):
         super(LogCreator, self).warning(msg, *args, **kwargs)
-        return self.logs_storage.pop()
+        return self.pop()
 
     def error(self, msg, *args, **kwargs):
         super(LogCreator, self).error(msg, *args, **kwargs)
-        return self.logs_storage.pop()
+        return self.pop()
 
     def critical(self, msg, *args, **kwargs):
         super(LogCreator, self).critical(msg, *args, **kwargs)
-        return self.logs_storage.pop()
+        return self.pop()
 
     def exception(self, msg, *args, exc_info=True, **kwargs):
         super(LogCreator, self).exception(msg, *args, exc_info=exc_info, **kwargs)
-        return self.logs_storage.pop()
+        return self.pop()
 
 
 @fixture
@@ -126,3 +129,8 @@ def file_pickle_log():
     yield file_path
     # after test - remove resource
     file_path.unlink()
+
+
+@fixture
+def define_stats_level():
+    set_custom_level("stats", 5)

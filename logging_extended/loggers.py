@@ -28,7 +28,7 @@ class MyLogger(logging.Logger):
     def makeRecord(self, name, level, fn, lno, msg, args, exc_info,
                    func=None, extra=None, sinfo=None):
         """
-        Allows overwriting already existing log attributes like funcName
+        Allows overwriting already existing log attributes like funcName for decorators.
         """
         rv = logging._logRecordFactory(name, level, fn, lno, msg, args, exc_info, func,
                                        sinfo)
@@ -38,22 +38,3 @@ class MyLogger(logging.Logger):
         return rv
 
 
-class BracketStyleAdapter(logging.LoggerAdapter):
-    """
-    Supports {} formatting of log messages
-
-    Can handle only positional args like {1}
-    does not support kwargs like a=5
-    """
-
-    def __init__(self, logger, extra=None):
-        super().__init__(logger, extra)
-        self.stats = partialmethod(self.__class__.log, STATS).__get__(self, self.__class__)
-        self.emergency = partialmethod(self.__class__.log, EMERGENCY).__get__(self, self.__class__)
-
-    def process(self, msg, kwargs):
-        if kwargs.get("extra") is not None and self.extra is not None:
-            kwargs["extra"] = {**kwargs["extra"], **self.extra}
-        elif self.extra is not None:  # if log func has no info but adapter class has, then include it in record
-            kwargs["extra"] = self.extra
-        return BraceString(msg), kwargs

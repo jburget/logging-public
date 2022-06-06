@@ -1,7 +1,6 @@
 import logging
 import pathlib
 from logging import DEBUG
-from logging import LogRecord
 from logging import StreamHandler
 from logging import getLogRecordFactory
 from logging import setLogRecordFactory
@@ -9,7 +8,10 @@ from logging import setLogRecordFactory
 from pytest import fixture
 from logging import getLogger
 from logging_extended import ColorFormatter
+from logging_extended import DollarAdapter
+from logging_extended import PickleHandler
 from logging_extended import set_custom_level
+from logging_extended import BraceAdapter
 
 
 @fixture(scope="function")
@@ -22,14 +24,8 @@ def logger() -> logging.Logger:
 
 
 @fixture
-def terminalHandler() -> StreamHandler:
+def terminal_handler() -> StreamHandler:
     return StreamHandler()
-
-
-@fixture
-def terminalLogger(logger, terminalHandler) -> logging.Logger:
-    logger.addHandler(terminalHandler)
-    return logger
 
 
 @fixture
@@ -38,15 +34,25 @@ def color_formatter():
 
 
 @fixture
-def colored_terminal_handler(terminalHandler, color_formatter):
-    terminalHandler.setFormatter(color_formatter)
-    return terminalHandler
+def colored_terminal_handler(terminal_handler, color_formatter):
+    terminal_handler.setFormatter(color_formatter)
+    return terminal_handler
 
 
 @fixture
-def colored_logger(terminalLogger, terminalHandler, color_formatter):
-    terminalHandler.setFormatter(color_formatter)
-    return terminalLogger
+def colored_logger(logger, colored_terminal_handler):
+    logger.addHandler(colored_terminal_handler)
+    return logger
+
+
+@fixture
+def bracket_adapter(colored_logger):
+    return BraceAdapter(colored_logger, {})
+
+
+@fixture
+def dollar_adapter(colored_logger):
+    return DollarAdapter(colored_logger, {})
 
 
 class LogCreator(logging.Logger):
@@ -107,22 +113,26 @@ class LogCreator(logging.Logger):
 
 
 @fixture
-def log_creator():
+def log_creator() -> LogCreator:
     return LogCreator(__name__)
 
 
-def base_log_records(log_factory_storage, logger):
-    logger.debug("debug long message")
-    logger.info("info long message")
-    logger.warning("warning long message")
-    logger.error("error long message")
-    logger.critical("critical long message")
-    return log_factory_storage
+@fixture
+def generate_basic_log_records(log_creator) -> list[logging.LogRecord]:
+    with log_creator as l:
+        records = [
+                l.debug("short message"),
+                l.info("short message"),
+                l.warning("short message"),
+                l.error("short message"),
+                l.critical("short message")
+        ]
+    return records
 
 
 # files
 @fixture(scope="session")
-def file_pickle_log():
+def file_pickle_log() -> pathlib.Path:
     # before test - create resource
     file_path = pathlib.Path("pickled.log")
     file_path.touch()
@@ -132,5 +142,15 @@ def file_pickle_log():
 
 
 @fixture
-def define_stats_level():
+def define_stats_level() -> None:
     set_custom_level("stats", 5)
+
+
+@fixture
+def pickle_reader(file_pickle_log) -> PickleHandler:
+    return PickleHandler(filename=file_pickle_log, mode="rb")
+
+
+@fixture
+def pickle_writer(file_pickle_log) -> PickleHandler:
+    return PickleHandler(filename=file_pickle_log, mode="wb")

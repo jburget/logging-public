@@ -1,12 +1,12 @@
 from logging_extended import ColorFormatter
 
 
-def test_brace_string(logger, terminalHandler):
+def test_brace_string(logger, terminal_handler):
     print()
     formatter = ColorFormatter(fmt="{levelname:^9} - {message}", style="{")
 
-    terminalHandler.setFormatter(formatter)
-    logger.addHandler(terminalHandler)
+    terminal_handler.setFormatter(formatter)
+    logger.addHandler(terminal_handler)
     x = "hello"
     y = 100_0000000000
     print("{x}".format(x=x))

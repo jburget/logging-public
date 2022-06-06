@@ -2,7 +2,6 @@ import logging
 
 import pytest
 import sty
-from pytest import fixture
 
 from logging_extended.formatters import display_sty_palette
 

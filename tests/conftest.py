@@ -1,9 +1,12 @@
 import logging
 import pathlib
+from queue import Empty
+from queue import Queue
 from logging import DEBUG
 from logging import StreamHandler
 from logging import getLogRecordFactory
 from logging import setLogRecordFactory
+from logging.handlers import QueueHandler, QueueListener
 
 from pytest import fixture
 from logging import getLogger
@@ -154,3 +157,38 @@ def pickle_reader(file_pickle_log) -> PickleHandler:
 @fixture
 def pickle_writer(file_pickle_log) -> PickleHandler:
     return PickleHandler(filename=file_pickle_log, mode="wb")
+
+
+@fixture(scope="session")
+def queue():
+    return Queue()
+
+
+@fixture
+def queue_handler(queue) -> QueueHandler:
+    return QueueHandler(queue)
+
+
+class QueueIterator:
+
+    def __init__(self, queue):
+        self.queue = queue
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        try:
+            return self.queue.get(timeout=0.1)
+        except Empty:
+            raise StopIteration()
+
+
+@fixture
+def queue_iterator(queue):
+    return QueueIterator(queue)
+
+
+@fixture
+def queue_listener(queue) -> QueueListener:
+    return QueueListener(queue, respect_handler_level=True)

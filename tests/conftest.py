@@ -13,6 +13,7 @@ from logging import getLogger
 from logging_extended import ColorFormatter
 from logging_extended import DollarAdapter
 from logging_extended import PickleHandler
+from logging_extended import StyleAdapter
 from logging_extended import set_custom_level
 from logging_extended import BraceAdapter
 
@@ -46,16 +47,6 @@ def colored_terminal_handler(terminal_handler, color_formatter):
 def colored_logger(logger, colored_terminal_handler):
     logger.addHandler(colored_terminal_handler)
     return logger
-
-
-@fixture
-def bracket_adapter(colored_logger):
-    return BraceAdapter(colored_logger, {})
-
-
-@fixture
-def dollar_adapter(colored_logger):
-    return DollarAdapter(colored_logger, {})
 
 
 class LogCreator(logging.Logger):
@@ -159,7 +150,8 @@ def pickle_writer(file_pickle_log) -> PickleHandler:
     return PickleHandler(filename=file_pickle_log, mode="wb")
 
 
-@fixture(scope="session")
+# @fixture(scope="session")
+@fixture  # seems to work just fine without scope
 def queue():
     return Queue()
 
@@ -173,6 +165,13 @@ class QueueIterator:
 
     def __init__(self, queue):
         self.queue = queue
+    #
+    # def clear(self):
+    #     while True:
+    #         try:
+    #             self.queue.get(timeout=0.1)
+    #         except Empty:
+    #             break
 
     def __iter__(self):
         return self
@@ -186,9 +185,33 @@ class QueueIterator:
 
 @fixture
 def queue_iterator(queue):
-    return QueueIterator(queue)
+    iterator = QueueIterator(queue)
+    yield iterator
+    # iterator.clear()
 
 
 @fixture
 def queue_listener(queue) -> QueueListener:
     return QueueListener(queue, respect_handler_level=True)
+
+
+@fixture
+def queue_logger(logger, queue_handler, queue_iterator) -> logging.Logger:
+    # instantiate queue_iterator to clear queue after test # scope of queue is back to default, clear is not needed
+    logger.addHandler(queue_handler)
+    return logger
+
+
+@fixture
+def style_adapter(queue_logger):
+    return StyleAdapter(queue_logger)
+
+
+@fixture
+def brace_adapter(queue_logger):
+    return BraceAdapter(queue_logger)
+
+
+@fixture
+def dollar_adapter(queue_logger):
+    return DollarAdapter(queue_logger)

@@ -1,15 +1,6 @@
 import logging
 
 
-class BraceString(str):
-
-    def __mod__(self, other):
-        return self.format(*other)
-
-    def __str__(self):
-        return self
-
-
 class MyLogger(logging.Logger):
     """
     logging.setLoggerClass(MyLogger)
@@ -29,5 +20,3 @@ class MyLogger(logging.Logger):
             for key in extra:
                 rv.__dict__[key] = extra[key]
         return rv
-
-

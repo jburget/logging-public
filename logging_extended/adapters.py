@@ -34,11 +34,11 @@ class StyleAdapter(LoggerAdapter):
             kwargs["extra"] = {**self.extra, **extra}
         elif kwargs.get('extra') is None and self.extra is not None:
             kwargs['extra'] = dict(self.extra)  # nested Adapters could modify it, if not copied
-        print(kwargs["extra"])
+        # print(kwargs["extra"])
         if isinstance(msg, (BraceMessage, DollarMessage)):
             # print(f"{msg.kwargs=}")
             msg.kwargs.update(kwargs["extra"])
-            print(msg.kwargs)
+            # print(msg.kwargs)
 
         for key in list(kwargs.keys()):  # remove kwargs, that cannot be passed to logger._log
             if key not in self._reserved_attrs:
@@ -52,10 +52,10 @@ class StyleAdapter(LoggerAdapter):
         contextual information from this adapter instance.
         """
         # some pain with stacklevel to log correct funcName in LogRecord
-        print(kwargs)
+        # print(kwargs)
         if kwargs.get("stacklevel") is not None:
             kwargs["stacklevel"] += 3
-            print(kwargs["stacklevel"])
+            # print(kwargs["stacklevel"])
         else:
             kwargs["stacklevel"] = 3
 

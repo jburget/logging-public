@@ -153,6 +153,7 @@ def test_adapters_chaining(brace_adapter, brace_adapter_2_chained, brace_adapter
     brace_adapter_3_chained.debug("debug {1} {0} {key}", "message", "long", extra={"key": "value"})
     for log in queue_iterator:
         assert log.message == "debug long message value"
+        assert log.funcName == "test_adapters_chaining"
 
     brace_adapter_3_chained.extra = {"ip": 12345}
     brace_adapter_3_chained.debug("debug long message {ip}")

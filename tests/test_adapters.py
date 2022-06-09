@@ -95,6 +95,20 @@ def test_brace_adapter(brace_adapter, queue_iterator, colored_terminal_handler):
         assert log.msg == "debug long message key: value"
 
 
+def test_function_name(style_adapter, queue_iterator, colored_terminal_handler):
+    print()
+    style_adapter.addHandler(colored_terminal_handler)
+    style_adapter.debug("debug long message", func="test_function")
+    style_adapter.info("info long message", func="test_function")
+    style_adapter.warning("warning long message", func="test_function")
+    for log in queue_iterator:
+        assert log.funcName == "test_function"
+    style_adapter.error("error long message")
+    style_adapter.critical("critical long message")
+    for log in queue_iterator:
+        assert log.funcName == "test_function_name"
+
+
 def test_use_extras_to_format_message(brace_adapter, queue_iterator, colored_terminal_handler):
     print()
     brace_adapter.logger.addHandler(colored_terminal_handler)

@@ -1,6 +1,8 @@
+import sys
 from logging import LoggerAdapter
 from inspect import stack
 from string import Template
+from .filters import FuncNameTagger
 
 
 # https://stackoverflow.com/questions/13131400/logging-variable-data-with-new-format-string
@@ -45,7 +47,26 @@ class StyleAdapter(LoggerAdapter):
         return msg, kwargs
 
     def log(self, level, msg, /, *args, **kwargs):
-        super().log(level, msg, **kwargs)
+        """
+        Delegate a log call to the underlying logger, after adding
+        contextual information from this adapter instance.
+        """
+        # some pain with stacklevel to log correct funcName in LogRecord
+        # print(kwargs)
+        if (stacklevel := kwargs.get("stacklevel")) is not None:
+            kwargs["stacklevel"] += 3
+            # print(stacklevel)
+        else:
+            kwargs["stacklevel"] = 3
+
+        func: str = kwargs.get("func", None)
+        if func is None or not isinstance(func, str):
+            super().log(level, msg, **kwargs)
+        else:
+            func_name_tagger = FuncNameTagger(func)
+            self.addFilter(func_name_tagger)
+            super().log(level, msg, *args, **kwargs)
+            self.removeFilter(func_name_tagger)
 
     def addHandler(self, handler):
         self.logger.addHandler(handler)
@@ -94,12 +115,14 @@ class BraceAdapter(StyleAdapter):
     # https://github.com/python/cpython/blob/5849af7a80166e9e82040e082f22772bd7cf3061/Lib/logging/__init__.py#L1936
     # https://github.com/python/cpython/blob/5849af7a80166e9e82040e082f22772bd7cf3061/Lib/logging/__init__.py#L1660
     def log(self, level, msg, /, *args, **kwargs):
+        kwargs["stacklevel"] = 1
         super().log(level, BraceMessage(msg, *args, **kwargs), **kwargs)
 
 
 class DollarAdapter(StyleAdapter):
 
     def log(self, level, msg, /, **kwargs):
+        kwargs["stacklevel"] = 1
         super().log(level, DollarMessage(msg, **kwargs), **kwargs)
 
 # TODO: for logging from decorators correct func name, use maybe stacklevel from

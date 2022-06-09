@@ -34,7 +34,7 @@ def terminal_handler() -> StreamHandler:
 
 @fixture
 def color_formatter():
-    return ColorFormatter(fmt="{name} - {levelname:^9} - {message}", style="{")
+    return ColorFormatter(fmt="{name} - {levelname:^9} - {funcName} - {message}", style="{")
 
 
 @fixture

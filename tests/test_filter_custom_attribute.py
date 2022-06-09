@@ -1,11 +1,11 @@
 from _pytest.fixtures import fixture
 
-from logging_extended.filters import LogRecordTag
+from logging_extended.filters import LogRecordTagger
 
 
 @fixture
 def tag_app_id():
-    return LogRecordTag(tag_name="app_id", tag_value=12)
+    return LogRecordTagger(tag_name="app_id", tag_value=12)
 
 
 def test_app_id(tag_app_id, log_creator, colored_terminal_handler):

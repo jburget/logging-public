@@ -3,6 +3,7 @@ from logging import LogRecord
 import pytest
 
 
+@pytest.mark.skip("spam output")
 def test_bracket_style_adapter(brace_adapter, colored_terminal_handler):
     print()
     brace_adapter.logger.addHandler(colored_terminal_handler)
@@ -95,18 +96,33 @@ def test_brace_adapter(brace_adapter, queue_iterator, colored_terminal_handler):
         assert log.msg == "debug long message key: value"
 
 
+def helper_func(logger):
+    logger.info("info long message")
+    logger.warning("warning long message")
+    try:
+        raise ValueError("test value error")
+    except ValueError:
+        logger.exception("exception long message")
+
+
 def test_function_name(style_adapter, queue_iterator, colored_terminal_handler):
     print()
     style_adapter.addHandler(colored_terminal_handler)
+
     style_adapter.debug("debug long message", func="test_function")
     style_adapter.info("info long message", func="test_function")
     style_adapter.warning("warning long message", func="test_function")
     for log in queue_iterator:
         assert log.funcName == "test_function"
+
     style_adapter.error("error long message")
     style_adapter.critical("critical long message")
     for log in queue_iterator:
         assert log.funcName == "test_function_name"
+
+    helper_func(style_adapter)
+    for log in queue_iterator:
+        assert log.funcName == "helper_func"
 
 
 def test_use_extras_to_format_message(brace_adapter, queue_iterator, colored_terminal_handler):
@@ -114,11 +130,17 @@ def test_use_extras_to_format_message(brace_adapter, queue_iterator, colored_ter
     brace_adapter.logger.addHandler(colored_terminal_handler)
     brace_adapter.debug("debug long message {key}", extra={"key": "value"})
 
-    brace_adapter.extra = {"id": 1234}
-    brace_adapter.debug("debug long message {id}", extra={"key": "value"})
-    brace_adapter.debug("debug long message {id}, {key}", extra={"key": "value"})
-    brace_adapter.debug("debug long message {id}, {key}, {var}", var="something", extra={"key": "value"})
+    brace_adapter.extra = {"key": "value"}
+    brace_adapter.debug("debug long message {key}")
+    brace_adapter.debug("debug long message {id}", extra={"id": "value"})
+    brace_adapter.debug("debug long {var} {key}", var="message", extra={"key": "value"})
+
+    brace_adapter.debug("debug long {} {key}", "message", extra={"key": "value"})
+    brace_adapter.debug("debug {1} {0} {key}", "message", "long", extra={"key": "value"})
+    for log in queue_iterator:
+        assert log.message == "debug long message value"
 
 
-def test_adapters_chaining(style_adapter):
+
+def test_adapters_chaining():
     print()

@@ -53,7 +53,7 @@ class StyleAdapter(LoggerAdapter):
         """
         # some pain with stacklevel to log correct funcName in LogRecord
         # print(kwargs)
-        if (stacklevel := kwargs.get("stacklevel")) is not None:
+        if kwargs.get("stacklevel") is not None:
             kwargs["stacklevel"] += 3
             # print(stacklevel)
         else:

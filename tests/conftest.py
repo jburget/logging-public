@@ -165,6 +165,7 @@ class QueueIterator:
 
     def __init__(self, queue):
         self.queue = queue
+
     #
     # def clear(self):
     #     while True:
@@ -210,6 +211,16 @@ def style_adapter(queue_logger):
 @fixture
 def brace_adapter(queue_logger):
     return BraceAdapter(queue_logger)
+
+
+@fixture
+def brace_adapter_2_chained(brace_adapter):
+    return BraceAdapter(brace_adapter)
+
+
+@fixture
+def brace_adapter_3_chained(brace_adapter_2_chained):
+    return BraceAdapter(brace_adapter_2_chained)
 
 
 @fixture

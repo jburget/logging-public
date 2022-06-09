@@ -34,11 +34,11 @@ class StyleAdapter(LoggerAdapter):
             kwargs["extra"] = {**self.extra, **extra}
         elif kwargs.get('extra') is None and self.extra is not None:
             kwargs['extra'] = dict(self.extra)  # nested Adapters could modify it, if not copied
-        # print(kwargs["extra"])
+        print(kwargs["extra"])
         if isinstance(msg, (BraceMessage, DollarMessage)):
             # print(f"{msg.kwargs=}")
             msg.kwargs.update(kwargs["extra"])
-            # print(msg.kwargs)
+            print(msg.kwargs)
 
         for key in list(kwargs.keys()):  # remove kwargs, that cannot be passed to logger._log
             if key not in self._reserved_attrs:
@@ -52,10 +52,10 @@ class StyleAdapter(LoggerAdapter):
         contextual information from this adapter instance.
         """
         # some pain with stacklevel to log correct funcName in LogRecord
-        # print(kwargs)
+        print(kwargs)
         if kwargs.get("stacklevel") is not None:
             kwargs["stacklevel"] += 3
-            # print(stacklevel)
+            print(kwargs["stacklevel"])
         else:
             kwargs["stacklevel"] = 3
 
@@ -95,7 +95,8 @@ class BraceMessage:
         self.kwargs = kwargs
 
     def __str__(self):
-        # print(f"{self.msg}")
+        # print(f"{self.msg=}")
+        # print(f"{self.args=}")
         # print(*[i.function for i in stack()[:8]])
         return str(self.msg).format(*self.args, **self.kwargs)
 
@@ -115,8 +116,11 @@ class BraceAdapter(StyleAdapter):
     # https://github.com/python/cpython/blob/5849af7a80166e9e82040e082f22772bd7cf3061/Lib/logging/__init__.py#L1936
     # https://github.com/python/cpython/blob/5849af7a80166e9e82040e082f22772bd7cf3061/Lib/logging/__init__.py#L1660
     def log(self, level, msg, /, *args, **kwargs):
-        kwargs["stacklevel"] = 1
-        super().log(level, BraceMessage(msg, *args, **kwargs), **kwargs)
+        if isinstance(msg, (BraceMessage, DollarMessage)):
+            super().log(level, msg, *args, **kwargs)
+        else:
+            kwargs["stacklevel"] = 1
+            super().log(level, BraceMessage(msg, *args, **kwargs), **kwargs)
 
 
 class DollarAdapter(StyleAdapter):

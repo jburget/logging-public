@@ -141,6 +141,26 @@ def test_use_extras_to_format_message(brace_adapter, queue_iterator, colored_ter
         assert log.message == "debug long message value"
 
 
-
-def test_adapters_chaining():
+def test_adapters_chaining(brace_adapter, brace_adapter_2_chained, brace_adapter_3_chained, colored_terminal_handler, queue_iterator):
     print()
+    brace_adapter_3_chained.addHandler(colored_terminal_handler)
+
+    brace_adapter.extra = {"key": "value"}
+    brace_adapter_3_chained.debug("debug long message {key}")
+    brace_adapter_3_chained.debug("debug long message {id}", extra={"id": "value"})
+    brace_adapter_3_chained.debug("debug long {var} {key}", var="message", extra={"key": "value"})
+    brace_adapter_3_chained.debug("debug long {} {key}", "message", extra={"key": "value"})
+    brace_adapter_3_chained.debug("debug {1} {0} {key}", "message", "long", extra={"key": "value"})
+    for log in queue_iterator:
+        assert log.message == "debug long message value"
+
+    brace_adapter_3_chained.extra = {"ip": 12345}
+    brace_adapter_3_chained.debug("debug long message {ip}")
+    for log in queue_iterator:
+        assert log.message == "debug long message 12345"
+        assert log.ip == 12345
+
+    brace_adapter_2_chained.extra = {"ip": 0}
+    brace_adapter_3_chained.debug("debug long message {ip}")
+    for log in queue_iterator:
+        assert log.message == "debug long message 12345"

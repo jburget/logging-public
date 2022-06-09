@@ -47,6 +47,25 @@ class StyleAdapter(LoggerAdapter):
     def log(self, level, msg, /, *args, **kwargs):
         super().log(level, msg, **kwargs)
 
+    def addHandler(self, handler):
+        self.logger.addHandler(handler)
+
+    def removeHandler(self, handler):
+        self.logger.removeHandler(handler)
+
+    def setLevel(self, level) -> None:
+        self.logger.setLevel(level)
+
+    @property
+    def filters(self):
+        return self.logger.filters
+
+    def addFilter(self, filter):
+        self.logger.addFilter(filter)
+
+    def removeFilter(self, filter):
+        self.logger.removeFilter(filter)
+
 
 class BraceMessage:
     def __init__(self, msg, /, *args, **kwargs):

@@ -2,6 +2,7 @@ from logging import LogRecord
 
 import pytest
 from logging_extended.adapters import StyleAdapter
+from logging_extended.adapters import BraceAdapter
 
 
 @pytest.mark.skip("spam output")
@@ -170,14 +171,71 @@ def test_adapters_chaining(brace_adapter, brace_adapter_2_chained, brace_adapter
 
 def test_more_chaining(logger, queue_iterator):
     print()
+    fname = "test_more_chaining"
     adapter = StyleAdapter(logger, {"key": "value"})
     adapter.info("info long message")
     adapter.warning("warning long message")
     for log in queue_iterator:
-        print(log.funcName)
+        assert log.funcName == fname
     new_adapter = StyleAdapter(adapter, {"new_key": "new value"})
     new_adapter.info("info long message")
     new_adapter.warning("warning long message")
     for log in queue_iterator:
-        print(log.funcName)
+        assert log.funcName == fname
+    brand_new_adapter = StyleAdapter(new_adapter, {"brand_new_key": "brand new value"})
+    brand_new_adapter.info("info long message")
+    brand_new_adapter.warning("warning long message")
+    for log in queue_iterator:
+        assert log.funcName == fname
+    brand_brand_new_adapter = StyleAdapter(brand_new_adapter, {"brand_brand_new_key": "brand brand new value"})
+    brand_brand_new_adapter.info("info long message")
+    brand_brand_new_adapter.warning("warning long message")
+    for log in queue_iterator:
+        assert log.funcName == fname
+
+
+def test_crazy_mixing_chains(logger, queue_iterator):
+    print()
+    fname = "test_crazy_mixing_chains"
+    adapter = StyleAdapter(logger, {"key": "value"})
+    new_adapter = StyleAdapter(adapter, {"new_key": "new value"})
+    brand_new_adapter = StyleAdapter(new_adapter, {"brand_new_key": "brand new value"})
+    brand_brand_new_adapter = StyleAdapter(brand_new_adapter, {"brand_brand_new_key": "brand brand new value"})
+    brace_adapter = BraceAdapter(brand_brand_new_adapter, {"brace_key": "brace value"})
+    brace_adapter.info("info long message")
+    brace_adapter.warning("warning long message")
+    for log in queue_iterator:
+        assert log.funcName == fname
+    new_brace_adapter = BraceAdapter(brace_adapter, {"new_brace_key": "new brace value"})
+    new_brace_adapter.info("info long message")
+    new_brace_adapter.warning("warning long message")
+    for log in queue_iterator:
+        assert log.funcName == fname
+
+    last_style_adapter = StyleAdapter(new_brace_adapter, {"last_style_key": "last style value"})
+    last_style_adapter.info("info long message")
+    last_style_adapter.warning("warning long message")
+    for log in queue_iterator:
+        assert log.funcName == fname
+    last_brace_adapter = BraceAdapter(last_style_adapter, {"last_brace_key": "last brace value"})
+    last_brace_adapter.info("info long message")
+    last_brace_adapter.warning("warning long message")
+    for log in queue_iterator:
+        assert log.funcName == fname
+    very_last_brace_adapter = BraceAdapter(last_brace_adapter, {"very_last_brace_key": "very last brace value"})
+    very_last_brace_adapter.info("info long message")
+    very_last_brace_adapter.warning("warning long message")
+    for log in queue_iterator:
+        assert log.funcName == fname
+    very_last_style_adapter = StyleAdapter(very_last_brace_adapter, {"very_last_style_key": "very last style value"})
+    very_last_style_adapter.info("info long message")
+    very_last_style_adapter.warning("warning long message")
+    for log in queue_iterator:
+        assert log.funcName == fname
+
+    realy_last_style_adapter = StyleAdapter(very_last_style_adapter, {"realy_last_style_key": "realy last style value"})
+    realy_last_style_adapter.info("info long message")
+    realy_last_style_adapter.warning("warning long message")
+    for log in queue_iterator:
+        assert log.funcName == fname
 

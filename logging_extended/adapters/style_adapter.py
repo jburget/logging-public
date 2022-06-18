@@ -51,16 +51,9 @@ class StyleAdapter(LoggerAdapter):
         # some pain with stacklevel to log correct funcName in LogRecord
         # print(kwargs)
         if kwargs.get("stacklevel") is not None:
-            if isinstance(self, StyleAdapter):
-                kwargs["stacklevel"] += 3
-            elif issubclass(self.__class__, StyleAdapter):
-                kwargs["stacklevel"] += 4
-            # print(kwargs["stacklevel"])
+                kwargs["stacklevel"] += 2
         else:
-            if isinstance(self, StyleAdapter):
-                kwargs["stacklevel"] = 3
-            elif issubclass(self.__class__, StyleAdapter):
-                kwargs["stacklevel"] = 4
+            kwargs["stacklevel"] = 3  # that means this is top level adapter
 
         func: str = kwargs.get("func", None)
         if func is None or not isinstance(func, str):

@@ -8,7 +8,7 @@
 
 # https://stackoverflow.com/questions/2266646/how-to-disable-logging-on-the-standard-error-stream
 import logging
-time_human = '%Y-%m-%d %H:%M:%S %p %a'
+HUMAN_TIME = '%Y-%m-%d %H:%M:%S %p %a'
 
 "{asctime} | {levelname} | {name} | {funcName} | {message}"
 '{levelname};{asctime}{msecs};{name};{funcName};{message}'

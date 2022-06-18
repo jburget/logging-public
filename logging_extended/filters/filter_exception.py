@@ -1,10 +1,13 @@
 from logging import Filter
 
 
-class Filter_exception(Filter):
+class ExceptionInfoFilter(Filter):
     """
     by default return True, if log record has exc_info
     if reverse is True, return False, if log record has exc_info
+
+    warning: in some situations, LogRecord.exc_info is removed during logging
+    for this reason is better to filter logs based on level logging.ERROR
     """
 
     def __init__(self, reverse: bool = False, *args, **kwargs):

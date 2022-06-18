@@ -1,3 +1,5 @@
-from .filter_exception import Filter_exception
-from .filter_level import Filter_level
+from .filter_exception import ExceptionInfoFilter
+from .filter_level import LevelFilter
 from .filter_custom_attribute import LogRecordTagger, FuncNameTagger
+
+__all__ = ["ExceptionInfoFilter", "LevelFilter", "LogRecordTagger", "FuncNameTagger"]

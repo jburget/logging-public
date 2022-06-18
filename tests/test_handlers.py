@@ -1,8 +1,8 @@
 import logging
-from logging_extended import rewrite_filter_on_object
+from logging_extended import rewrite_filter_on_filterer
 import pytest
 
-from logging_extended.filters import Filter_exception
+from logging_extended.filters import ExceptionInfoFilter
 
 
 @pytest.mark.dependency
@@ -25,7 +25,7 @@ def test_loading_pickle(pickle_reader):
 def test_filter_if_any(log_creator, colored_terminal_handler):
     print()
 
-    rewrite_filter_on_object(colored_terminal_handler)  # rewrite built-in filter
+    rewrite_filter_on_filterer(colored_terminal_handler)  # rewrite built-in filter
     colored_terminal_handler.addFilter(lambda record: record.levelno == logging.DEBUG)
     colored_terminal_handler.addFilter(lambda record: record.levelno == logging.INFO)
 
@@ -37,7 +37,7 @@ def test_filter_if_any(log_creator, colored_terminal_handler):
         assert not colored_terminal_handler.filter(logger.error("message"))
         assert not colored_terminal_handler.filter(logger.critical("message"))
 
-        colored_terminal_handler.addFilter(Filter_exception(reverse=True))
+        colored_terminal_handler.addFilter(ExceptionInfoFilter(reverse=True))
 
         assert colored_terminal_handler.filter(logger.debug("message"))
         assert colored_terminal_handler.filter(logger.info("message"))

@@ -2,7 +2,7 @@ import logging
 from typing import Optional
 
 
-class Csv_Formatter(logging.Formatter):
+class CsvFormatter(logging.Formatter):
     """
     Subclass that takes care about special requirements of csv formatting
     """

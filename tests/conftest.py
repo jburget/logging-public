@@ -10,7 +10,7 @@ from logging.handlers import QueueHandler, QueueListener
 
 from pytest import fixture
 from logging import getLogger
-from logging_extended import ColorFormatter
+from logging_extended.formatters import ColorFormatter
 from logging_extended import DollarAdapter
 from logging_extended import PickleHandler
 from logging_extended import StyleAdapter

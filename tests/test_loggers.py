@@ -1,4 +1,4 @@
-from logging_extended import ColorFormatter
+from logging_extended.formatters import ColorFormatter
 
 
 def test_brace_string(logger, terminal_handler):

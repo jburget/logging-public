@@ -1,6 +1,7 @@
 .idea/*
 logging_setup.py
 my_logging.py
+*.md
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

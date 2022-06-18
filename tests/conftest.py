@@ -12,19 +12,10 @@ from pytest import fixture
 from logging import getLogger
 from logging_extended.formatters import ColorFormatter
 from logging_extended import DollarAdapter
-from logging_extended import PickleHandler
+from logging_extended.handlers import PickleHandler
 from logging_extended import StyleAdapter
 from logging_extended import set_custom_level
 from logging_extended import BraceAdapter
-
-
-@fixture(scope="function")
-def logger() -> logging.Logger:
-    logger = getLogger(__name__)
-    logger.setLevel(1)
-    while logger.handlers:  # remove all handlers, avoid duplicate handlers during test
-        logger.removeHandler(logger.handlers[0])
-    return logger
 
 
 @fixture
@@ -43,10 +34,66 @@ def colored_terminal_handler(terminal_handler, color_formatter):
     return terminal_handler
 
 
+# @fixture(scope="session")
+@fixture  # seems to work just fine without scope
+def queue():
+    return Queue()
+
+
+@fixture
+def queue_handler(queue) -> QueueHandler:
+    return QueueHandler(queue)
+
+
+@fixture
+def logger(queue_handler) -> logging.Logger:
+    logger = getLogger(__name__)
+    logger.setLevel(1)
+    while logger.handlers:  # remove all handlers, avoid duplicate handlers during test
+        logger.removeHandler(logger.handlers[0])
+    logger.addHandler(queue_handler)
+    return logger
+
+
 @fixture
 def colored_logger(logger, colored_terminal_handler):
     logger.addHandler(colored_terminal_handler)
     return logger
+
+
+class QueueIterator:
+
+    def __init__(self, queue):
+        self.queue = queue
+
+    #
+    # def clear(self):
+    #     while True:
+    #         try:
+    #             self.queue.get(timeout=0.1)
+    #         except Empty:
+    #             break
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        try:
+            return self.queue.get(timeout=0.1)
+        except Empty:
+            raise StopIteration()
+
+
+@fixture
+def queue_iterator(queue):
+    iterator = QueueIterator(queue)
+    yield iterator
+    # iterator.clear()
+
+
+@fixture
+def queue_listener(queue) -> QueueListener:
+    return QueueListener(queue, respect_handler_level=True)
 
 
 class LogCreator(logging.Logger):
@@ -111,19 +158,6 @@ def log_creator() -> LogCreator:
     return LogCreator(__name__)
 
 
-@fixture
-def generate_basic_log_records(log_creator) -> list[logging.LogRecord]:
-    with log_creator as l:
-        records = [
-                l.debug("short message"),
-                l.info("short message"),
-                l.warning("short message"),
-                l.error("short message"),
-                l.critical("short message")
-        ]
-    return records
-
-
 # files
 @fixture(scope="session")
 def file_pickle_log() -> pathlib.Path:
@@ -150,67 +184,16 @@ def pickle_writer(file_pickle_log) -> PickleHandler:
     return PickleHandler(filename=file_pickle_log, mode="wb")
 
 
-# @fixture(scope="session")
-@fixture  # seems to work just fine without scope
-def queue():
-    return Queue()
+# adapters
+
+@fixture
+def style_adapter(logger):
+    return StyleAdapter(logger)
 
 
 @fixture
-def queue_handler(queue) -> QueueHandler:
-    return QueueHandler(queue)
-
-
-class QueueIterator:
-
-    def __init__(self, queue):
-        self.queue = queue
-
-    #
-    # def clear(self):
-    #     while True:
-    #         try:
-    #             self.queue.get(timeout=0.1)
-    #         except Empty:
-    #             break
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        try:
-            return self.queue.get(timeout=0.1)
-        except Empty:
-            raise StopIteration()
-
-
-@fixture
-def queue_iterator(queue):
-    iterator = QueueIterator(queue)
-    yield iterator
-    # iterator.clear()
-
-
-@fixture
-def queue_listener(queue) -> QueueListener:
-    return QueueListener(queue, respect_handler_level=True)
-
-
-@fixture
-def queue_logger(logger, queue_handler, queue_iterator) -> logging.Logger:
-    # instantiate queue_iterator to clear queue after test # scope of queue is back to default, clear is not needed
-    logger.addHandler(queue_handler)
-    return logger
-
-
-@fixture
-def style_adapter(queue_logger):
-    return StyleAdapter(queue_logger)
-
-
-@fixture
-def brace_adapter(queue_logger):
-    return BraceAdapter(queue_logger)
+def brace_adapter(logger):
+    return BraceAdapter(logger)
 
 
 @fixture
@@ -224,5 +207,5 @@ def brace_adapter_3_chained(brace_adapter_2_chained):
 
 
 @fixture
-def dollar_adapter(queue_logger):
-    return DollarAdapter(queue_logger)
+def dollar_adapter(logger):
+    return DollarAdapter(logger)

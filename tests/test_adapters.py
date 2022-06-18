@@ -1,6 +1,7 @@
 from logging import LogRecord
 
 import pytest
+from logging_extended.adapters import StyleAdapter
 
 
 @pytest.mark.skip("spam output")
@@ -165,3 +166,18 @@ def test_adapters_chaining(brace_adapter, brace_adapter_2_chained, brace_adapter
     brace_adapter_3_chained.debug("debug long message {ip}")
     for log in queue_iterator:
         assert log.message == "debug long message 12345"
+
+
+def test_more_chaining(logger, queue_iterator):
+    print()
+    adapter = StyleAdapter(logger, {"key": "value"})
+    adapter.info("info long message")
+    adapter.warning("warning long message")
+    for log in queue_iterator:
+        print(log.funcName)
+    new_adapter = StyleAdapter(adapter, {"new_key": "new value"})
+    new_adapter.info("info long message")
+    new_adapter.warning("warning long message")
+    for log in queue_iterator:
+        print(log.funcName)
+

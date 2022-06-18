@@ -4,7 +4,6 @@ from logging import FileHandler
 from logging import Formatter
 
 from logging_extended.formatters import PickleFormatter
-from logging_extended.formatters import PickleFormatter
 
 
 class PickleHandler(FileHandler):

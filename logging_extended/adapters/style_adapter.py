@@ -1,11 +1,8 @@
-import sys
 from logging import LoggerAdapter
-from inspect import stack
-from string import Template
-from .filters import FuncNameTagger
 
-
-# https://stackoverflow.com/questions/13131400/logging-variable-data-with-new-format-string
+from logging_extended.adapters import BraceMessage
+from logging_extended.adapters import DollarMessage
+from logging_extended.filters import FuncNameTagger
 
 
 class StyleAdapter(LoggerAdapter):
@@ -54,10 +51,16 @@ class StyleAdapter(LoggerAdapter):
         # some pain with stacklevel to log correct funcName in LogRecord
         # print(kwargs)
         if kwargs.get("stacklevel") is not None:
-            kwargs["stacklevel"] += 3
+            if isinstance(self, StyleAdapter):
+                kwargs["stacklevel"] += 3
+            elif issubclass(self.__class__, StyleAdapter):
+                kwargs["stacklevel"] += 4
             # print(kwargs["stacklevel"])
         else:
-            kwargs["stacklevel"] = 3
+            if isinstance(self, StyleAdapter):
+                kwargs["stacklevel"] = 3
+            elif issubclass(self.__class__, StyleAdapter):
+                kwargs["stacklevel"] = 4
 
         func: str = kwargs.get("func", None)
         if func is None or not isinstance(func, str):
@@ -86,48 +89,3 @@ class StyleAdapter(LoggerAdapter):
 
     def removeFilter(self, filter):
         self.logger.removeFilter(filter)
-
-
-class BraceMessage:
-    def __init__(self, msg, /, *args, **kwargs):
-        self.msg = msg
-        self.args = args
-        self.kwargs = kwargs
-
-    def __str__(self):
-        # print(f"{self.msg=}")
-        # print(f"{self.args=}")
-        # print(*[i.function for i in stack()[:8]])
-        return str(self.msg).format(*self.args, **self.kwargs)
-
-
-class DollarMessage:
-    def __init__(self, fmt, /, **kwargs):
-        self.fmt = fmt
-        self.kwargs = kwargs
-
-    def __str__(self):
-        return Template(self.fmt).substitute(**self.kwargs)
-
-
-# https://docs.python.org/3/howto/logging-cookbook.html#use-of-alternative-formatting-styles
-class BraceAdapter(StyleAdapter):
-
-    # https://github.com/python/cpython/blob/5849af7a80166e9e82040e082f22772bd7cf3061/Lib/logging/__init__.py#L1936
-    # https://github.com/python/cpython/blob/5849af7a80166e9e82040e082f22772bd7cf3061/Lib/logging/__init__.py#L1660
-    def log(self, level, msg, /, *args, **kwargs):
-        if isinstance(msg, (BraceMessage, DollarMessage)):
-            super().log(level, msg, *args, **kwargs)
-        else:
-            kwargs["stacklevel"] = 1
-            super().log(level, BraceMessage(msg, *args, **kwargs), **kwargs)
-
-
-class DollarAdapter(StyleAdapter):
-
-    def log(self, level, msg, /, **kwargs):
-        kwargs["stacklevel"] = 1
-        super().log(level, DollarMessage(msg, **kwargs), **kwargs)
-
-# TODO: for logging from decorators correct func name, use maybe stacklevel from
-# https://github.com/python/cpython/blob/5849af7a80166e9e82040e082f22772bd7cf3061/Lib/logging/__init__.py#L1660

@@ -8,6 +8,7 @@ flowchart LR
     A2(app2)
     A3(app3)
     S((server))
+    WS((WebServer))
     D[(MongoDB <br> database)]
     
     
@@ -21,7 +22,11 @@ flowchart LR
     subgraph Docker
     S-->D
     A3-->S
+    WS
     end
+    WS-.->B1
+    WS-.->B2
+    WS-.->B3
 
 ```
 

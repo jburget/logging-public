@@ -1,18 +1,47 @@
 from .helpers import BraceMessage
 from .helpers import DollarMessage
-from logging_extended.adapters.style_adapter import StyleAdapter
+from logging_extended.adapters.style_adapter import MergeExtrasAdapter
+
 
 # https://stackoverflow.com/questions/13131400/logging-variable-data-with-new-format-string
 
 
-class BaseStyleAdapter(StyleAdapter):
+class BaseLogAdapter(MergeExtrasAdapter):
+    """
+    This should be subclassed, log method rewriting is required, process method is optional
+    need to be called super().process
+    """
 
     def process(self, msg, kwargs):
         if kwargs.get("stacklevel") is not None:
-                kwargs["stacklevel"] += 1
+            kwargs["stacklevel"] += 1
         else:
             kwargs["stacklevel"] = 2
-        return super().process(msg, kwargs)
+        return msg, kwargs
+
+
+class LogAndMergeAdapter(BaseLogAdapter):
+    """
+    Combines merge extras functionality with ability to rewrite log method with super call
+    """
+
+    def process(self, msg, kwargs):
+        msg, kwargs = super().process(*self.merge_extras(msg, kwargs))
+
+        return msg, kwargs
+
+
+class BaseStyleAdapter(LogAndMergeAdapter):
+
+    """Extends msg object dict with extra dict to include all chained extra in log record,
+     and to be able to use it in msg"""
+
+    def process(self, msg, kwargs):
+        msg, kwargs = super().process(msg, kwargs)
+
+        if isinstance(msg, (BraceMessage, DollarMessage)):
+            msg.kwargs.update(kwargs["extra"])
+        return msg, kwargs
 
 
 class BraceAdapter(BaseStyleAdapter):

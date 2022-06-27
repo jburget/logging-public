@@ -194,7 +194,7 @@ def test_more_chaining(logger, queue_iterator):
         assert log.funcName == fname
 
 
-def test_crazy_mixing_chains(logger, queue_iterator):
+def test_crazy_mixing_chains(logger, queue_iterator, define_stats_level):
     print()
     fname = "test_crazy_mixing_chains"
     adapter = StyleAdapter(logger, {"key": "value"})
@@ -236,6 +236,12 @@ def test_crazy_mixing_chains(logger, queue_iterator):
     realy_last_style_adapter = StyleAdapter(very_last_style_adapter, {"realy_last_style_key": "realy last style value"})
     realy_last_style_adapter.info("info long message")
     realy_last_style_adapter.warning("warning long message")
+    realy_last_style_adapter.stats("warning long message")
     for log in queue_iterator:
         assert log.funcName == fname
+        assert log.realy_last_style_key == "realy last style value"
+
+    realy_last_style_adapter.stats("info")
+    for log in queue_iterator:
+        assert log.levelno == 5
 

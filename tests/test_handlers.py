@@ -1,5 +1,4 @@
 import logging
-from logging_extended import rewrite_filter_on_filterer
 import pytest
 
 from logging_extended.filters import ExceptionInfoFilter
@@ -22,28 +21,16 @@ def test_loading_pickle(pickle_reader):
         print(chunk)
 
 
-def test_filter_if_any(log_creator, colored_terminal_handler):
+def test_filter_if_any(logger, queue_iterator, any_filter):
     print()
+    any_filter.addFilter(lambda l: l.levelno == logging.DEBUG)
+    any_filter.addFilter(lambda l: l.levelno == logging.INFO)
+    logger.addFilter(any_filter)
 
-    rewrite_filter_on_filterer(colored_terminal_handler)  # rewrite built-in filter
-    colored_terminal_handler.addFilter(lambda record: record.levelno == logging.DEBUG)
-    colored_terminal_handler.addFilter(lambda record: record.levelno == logging.INFO)
-
-    with log_creator as logger:  # in this context, logger returns LogRecord
-        logger.addHandler(colored_terminal_handler)
-        assert colored_terminal_handler.filter(logger.debug("message"))
-        assert colored_terminal_handler.filter(logger.info("message"))
-        assert not colored_terminal_handler.filter(logger.warning("message"))
-        assert not colored_terminal_handler.filter(logger.error("message"))
-        assert not colored_terminal_handler.filter(logger.critical("message"))
-
-        colored_terminal_handler.addFilter(ExceptionInfoFilter(reverse=True))
-
-        assert colored_terminal_handler.filter(logger.debug("message"))
-        assert colored_terminal_handler.filter(logger.info("message"))
-        assert colored_terminal_handler.filter(logger.warning("message"))
-        assert colored_terminal_handler.filter(logger.error("message"))
-        assert colored_terminal_handler.filter(logger.critical("message"))
+    logger.info("message")
+    logger.debug("message")
+    logger.warning("message")
+    assert len(queue_iterator) == 2
 
 
 @pytest.mark.skip(reason="spam output")

@@ -16,7 +16,11 @@ from logging_extended.handlers import PickleHandler
 from logging_extended import StyleAdapter
 from logging_extended import set_custom_level
 from logging_extended import BraceAdapter
+from logging_extended.filters import AnyFilterer
 
+@fixture
+def any_filter():
+    return AnyFilterer()
 
 @fixture
 def terminal_handler() -> StreamHandler:
@@ -82,6 +86,9 @@ class QueueIterator:
             return self.queue.get(timeout=0.1)
         except Empty:
             raise StopIteration()
+
+    def __len__(self):
+        return sum(1 for _ in self)
 
 
 @fixture

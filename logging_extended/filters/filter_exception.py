@@ -3,8 +3,8 @@ from logging import Filter
 
 class ExceptionInfoFilter(Filter):
     """
-    by default return True, if log record has exc_info
-    if reverse is True, return False, if log record has exc_info
+    by default return True, if log record has exc_info or exc_text
+    Can be reversed
 
     warning: in some situations, LogRecord.exc_info is removed during logging
     for this reason is better to filter logs based on level logging.ERROR
@@ -16,6 +16,7 @@ class ExceptionInfoFilter(Filter):
 
     def filter(self, log_record):
         # https://stackoverflow.com/questions/47432006/logging-exception-filters-in-python
+        is_exception = log_record.exc_text is not None or log_record.exc_info is not None
         if self.reverse:
-            return log_record.exc_info is None
-        return log_record.exc_info is not None
+            return not is_exception
+        return is_exception

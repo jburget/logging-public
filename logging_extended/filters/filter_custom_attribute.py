@@ -17,7 +17,6 @@ class LogRecordTagger(Filter):
 
 
 class FuncNameTagger(LogRecordTagger):
-
     """
     Allows overwriting of the function name in the log record.
 
@@ -27,5 +26,13 @@ class FuncNameTagger(LogRecordTagger):
     Useful for decorators to log actual name of the function.
     """
 
-    def __init__(self, function_name: str):
+    def __init__(self, logger, function_name: str):
         super().__init__('funcName', function_name, safe_mode=False)
+        self.logger = logger
+
+    def __enter__(self):
+        self.logger.addFilter(self)
+        return self.logger
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.logger.removeFilter(self)

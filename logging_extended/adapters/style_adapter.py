@@ -57,10 +57,8 @@ class BaseAdapter(LoggerAdapter):
             kwargs["stacklevel"] = 3  # that means this is top level adapter
 
         if (func := kwargs.pop("func", None)) is not None:
-            func_name_tagger = FuncNameTagger(func)
-            self.addFilter(func_name_tagger)
-            super().log(level, msg, *args, **kwargs)
-            self.removeFilter(func_name_tagger)
+            with FuncNameTagger(self, func):
+                super().log(level, msg, *args, **kwargs)
         else:
             super().log(level, msg, **kwargs)
 
